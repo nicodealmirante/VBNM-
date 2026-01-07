@@ -1,12 +1,11 @@
 {
-  "name": "wld-airdrop",
+  "name": "selfie-mirror-miniapp",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
   "scripts": {
-    "start": "node server.js"
+    "start": "npx serve public -l 3000"
   },
   "dependencies": {
-    "express": "^4.19.2",
-    "ethers": "^6.11.1"
+    "serve": "^14.2.0"
   }
 }
