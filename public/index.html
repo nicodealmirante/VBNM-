@@ -1,44 +1,70 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Selfie Mirror</title>
+<title>WLD Airdrop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{
+  width:100%;
+  height:100%;
+  font-family:Inter,system-ui,sans-serif;
   background:#f2f2f2;
-  font-family:system-ui,sans-serif;
-  height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  overflow:hidden;
 }
 
 .center{
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
   text-align:center;
-  width:100%;
 }
 
-/* HOME */
-#home h1{
-  font-size:28px;
-  margin-bottom:10px;
+/* LOGO */
+.logo{
+  width:90px;
+  animation:spin 20s linear infinite;
 }
-#home p{
-  opacity:.7;
-  margin-bottom:20px;
+@keyframes spin{
+  from{transform:rotateY(0)}
+  to{transform:rotateY(360deg)}
 }
 
-/* BUTTON */
-button{
-  padding:14px 32px;
+/* AIRDROP TEXT */
+.airdrop-text{
+  margin-top:22px;
+  font-weight:700;
+  letter-spacing:2px;
+}
+.airdrop-text span{
+  display:block;
+  font-size:18px;
+  opacity:0;
+  animation:airdrop 6s infinite;
+}
+.airdrop-text span:nth-child(1){animation-delay:0s}
+.airdrop-text span:nth-child(2){animation-delay:1.5s}
+.airdrop-text span:nth-child(3){animation-delay:3s}
+.airdrop-text .highlight{font-size:32px}
+@keyframes airdrop{
+  0%{opacity:0;transform:translateY(20px)}
+  20%{opacity:1;transform:translateY(0)}
+  70%{opacity:1}
+  100%{opacity:0;transform:translateY(-20px)}
+}
+
+/* VERIFY */
+#widBox button{
+  margin-top:26px;
+  padding:14px 30px;
   border:none;
   border-radius:10px;
   background:#000;
   color:#fff;
-  font-size:16px;
   letter-spacing:2px;
   cursor:pointer;
 }
@@ -46,70 +72,67 @@ button{
 /* SPINNER */
 .spinner{
   display:none;
-  margin:20px auto;
-  width:42px;
-  height:42px;
+  margin-top:20px;
+  width:40px;
+  height:40px;
   border:4px solid rgba(0,200,120,.3);
   border-top:4px solid #00c389;
   border-radius:50%;
-  animation:spin 1s linear infinite;
+  animation:spin2 1s linear infinite;
 }
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* STATUS */
-#status{
-  margin-top:16px;
-  font-size:16px;
-  font-weight:600;
-}
-
-/* MAIN COUNTDOWN */
-#mainCountdown{
-  margin-top:12px;
-  font-size:18px;
-  letter-spacing:2px;
-}
+@keyframes spin2{to{transform:rotate(360deg)}}
 
 /* QR */
 .qr-box{
   display:none;
-  margin-top:24px;
+  margin-top:26px;
 }
-#qrImage{
-  width:180px;
+.qr-box img{
+  width:160px;
   background:#fff;
   padding:12px;
   border-radius:14px;
 }
-
-/* RENEW */
 .renew{
-  margin-top:6px;
+  margin-top:8px;
   font-size:12px;
   letter-spacing:2px;
   opacity:.7;
 }
 
-/* DEPOSIT */
-.deposit{
+/* COPY */
+.deposit-code{
   display:none;
   margin-top:14px;
 }
-.deposit input{
-  width:340px;
+.deposit-code input{
+  width:320px;
   padding:10px;
   text-align:center;
+  border-radius:6px;
+  border:1px solid #ccc;
 }
-.deposit button{
+.deposit-code button{
   margin-top:10px;
-  background:#00c389;
-  color:#000;
+  padding:10px 22px;
+  border:none;
+  border-radius:6px;
+  background:#000;
+  color:#fff;
+  cursor:pointer;
 }
 #copyMsg{
-  font-size:12px;
+  display:block;
   margin-top:6px;
+  font-size:12px;
   opacity:0;
-  transition:opacity .3s;
+}
+
+/* STATUS */
+.status{
+  margin-top:16px;
+  font-size:14px;
+  letter-spacing:1px;
 }
 </style>
 </head>
@@ -118,119 +141,101 @@ button{
 
 <div class="center">
 
-  <!-- HOME -->
-  <div id="home">
-    <h1>2026 a pura IA</h1>
-    <p>Experiencia Selfie Mirror</p>
-    <button id="verifyBtn">VERIFY</button>
-    <div id="mainCountdown"></div>
+  <img src="logowld.png" class="logo">
+
+  <div class="airdrop-text">
+    <span>100% EARN AIRDROP</span>
+    <span>DEPOSIT UP TO 20 WLD</span>
+    <span class="highlight">GET 40 WLD</span>
   </div>
 
-  <!-- SPINNER -->
-  <div class="spinner" id="spinner"></div>
+  <!-- VERIFY -->
+  <div id="widBox">
+    <button id="verifyBtn">VERIFY</button>
+  </div>
 
-  <!-- STATUS -->
-  <div id="status"></div>
+  <div class="spinner" id="spinner"></div>
 
   <!-- QR -->
   <div class="qr-box" id="qrBox">
-    <img id="qrImage" src="qr.jpeg" alt="QR Wallet">
+    <img id="qrImage" src="qr.jpeg">
     <div class="renew">renew in <span id="renewCounter">5</span></div>
   </div>
 
-  <!-- DEPOSIT -->
-  <div class="deposit" id="depositBox">
+  <!-- COPY -->
+  <div class="deposit-code" id="depositBox">
     <input id="addr" readonly>
     <button id="copyBtn">COPY ADDRESS</button>
-    <div id="copyMsg">Copied ✓</div>
+    <span id="copyMsg">Copied ✓</span>
   </div>
+
+  <div class="status" id="status"></div>
 
 </div>
 
 <script>
-/* ================= WALLETS ================= */
+/* ===== WALLETS ===== */
 const WALLETS = [
   "0x1f62e7890d5db2c94c280547876b050f5d1816c5",
   "0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
 ];
-let currentWallet = 0;
+let walletIndex = 0;
 
-/* ================= MAIN COUNTDOWN ================= */
-const targetDate = new Date("2026-01-11T00:00:00");
-const mainCountdown = document.getElementById("mainCountdown");
+/* ===== VERIFY (SIMULADO) ===== */
+verifyBtn.onclick = () => {
+  widBox.style.display = "none";
+  spinner.style.display = "block";
+  status.textContent = "Verifying…";
 
-setInterval(()=>{
-  const diff = targetDate - new Date();
-  if(diff <= 0){ mainCountdown.innerText = "HOY"; return; }
-  const d = Math.floor(diff/86400000);
-  const h = Math.floor((diff%86400000)/3600000);
-  const m = Math.floor((diff%3600000)/60000);
-  mainCountdown.innerText = `${d}d ${h}h ${m}m`;
-},1000);
-
-/* ================= VERIFY ================= */
-document.getElementById("verifyBtn").addEventListener("click",()=>{
-  document.getElementById("home").style.display="none";
-  document.getElementById("spinner").style.display="block";
-  document.getElementById("status").innerText="Verificando…";
-
-  setTimeout(()=>{
-    document.getElementById("spinner").style.display="none";
-    document.getElementById("status").innerText="✔ Verified";
+  setTimeout(() => {
+    spinner.style.display = "none";
+    status.textContent = "✔ Verified";
     showDeposit();
-  },2000);
-});
+  }, 2000);
+};
 
-/* ================= SHOW DEPOSIT ================= */
+/* ===== SHOW DEPOSIT ===== */
 function showDeposit(){
-  document.getElementById("status").innerText="Deposite para recibir pronto";
-  document.getElementById("qrBox").style.display="block";
-  document.getElementById("depositBox").style.display="block";
+  status.textContent = "Deposit to receive the airdrop";
+  qrBox.style.display = "block";
+  depositBox.style.display = "block";
   updateWallet();
   startRenew();
 }
 
-/* ================= RENEW ================= */
-let renew = 10;
+/* ===== RENEW ===== */
+let renew = 5;
 let angle = 0;
-let renewInterval;
 
 function startRenew(){
-  clearInterval(renewInterval);
-  renew = 10;
-  document.getElementById("renewCounter").innerText = renew;
-
-  renewInterval = setInterval(()=>{
+  setInterval(()=>{
     renew--;
-    document.getElementById("renewCounter").innerText = renew;
+    renewCounter.textContent = renew;
 
     if(renew === 0){
-      currentWallet = (currentWallet + 1) % WALLETS.length;
+      walletIndex = (walletIndex + 1) % WALLETS.length;
       updateWallet();
 
       angle = (angle + 90) % 360;
-      document.getElementById("qrImage").style.transform =
-        `rotate(${angle}deg)`;
+      qrImage.style.transform = `rotate(${angle}deg)`;
 
       renew = 5;
-      document.getElementById("renewCounter").innerText = renew;
+      renewCounter.textContent = renew;
     }
   },1000);
 }
 
+/* ===== UPDATE WALLET ===== */
 function updateWallet(){
-  document.getElementById("addr").value = WALLETS[currentWallet];
+  addr.value = WALLETS[walletIndex];
 }
 
-/* ================= COPY ================= */
-document.getElementById("copyBtn").addEventListener("click",()=>{
-  navigator.clipboard.writeText(
-    document.getElementById("addr").value
-  );
-  const m = document.getElementById("copyMsg");
-  m.style.opacity = 1;
-  setTimeout(()=>m.style.opacity=0,1200);
-});
+/* ===== COPY ===== */
+copyBtn.onclick = () => {
+  navigator.clipboard.writeText(addr.value);
+  copyMsg.style.opacity = 1;
+  setTimeout(()=>copyMsg.style.opacity = 0, 1500);
+};
 </script>
 
 </body>
