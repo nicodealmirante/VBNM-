@@ -66,8 +66,9 @@
         setStatus("🔍 Verificando identidad...");
 
         const { finalPayload } = await MiniKit.commandsAsync.verify({
-          action: ACTION_ID,
-          signal: "selfie-mirror-session"
+  action: "wld-airdrop",
+  signal: "session-1",
+
         });
 
         if (!finalPayload?.nullifier_hash) {
