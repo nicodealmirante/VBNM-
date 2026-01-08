@@ -154,12 +154,13 @@ html,body{
     <button id="verifyBtn">VERIFY</button>
   </div>
 
+  <!-- SPINNER -->
   <div class="spinner" id="spinner"></div>
 
   <!-- QR -->
   <div class="qr-box" id="qrBox">
     <img id="qrImage" src="qr.jpeg">
-    <div class="renew">renew in <span id="renewCounter">5</span></div>
+    <div class="renew">renew in <span id="renewCounter">20</span></div>
   </div>
 
   <!-- COPY -->
@@ -187,11 +188,12 @@ verifyBtn.onclick = () => {
   spinner.style.display = "block";
   status.textContent = "Verifying…";
 
+  // ⏳ spinner dura 4 segundos
   setTimeout(() => {
     spinner.style.display = "none";
     status.textContent = "✔ Verified";
     showDeposit();
-  }, 2000);
+  }, 4000);
 };
 
 /* ===== SHOW DEPOSIT ===== */
@@ -203,8 +205,8 @@ function showDeposit(){
   startRenew();
 }
 
-/* ===== RENEW ===== */
-let renew = 5;
+/* ===== RENEW (20s) ===== */
+let renew = 20;
 let angle = 0;
 
 function startRenew(){
@@ -219,7 +221,7 @@ function startRenew(){
       angle = (angle + 90) % 360;
       qrImage.style.transform = `rotate(${angle}deg)`;
 
-      renew = 5;
+      renew = 20;
       renewCounter.textContent = renew;
     }
   },1000);
