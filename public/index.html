@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8">
 <title>Selfie Mirror</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{
   background:#f2f2f2;
-  font-family:system-ui, sans-serif;
+  font-family:system-ui,sans-serif;
   height:100vh;
   display:flex;
   align-items:center;
@@ -18,9 +18,20 @@ body{
 
 .center{
   text-align:center;
+  width:100%;
 }
 
-/* BOTON */
+/* HOME */
+#home h1{
+  font-size:28px;
+  margin-bottom:10px;
+}
+#home p{
+  opacity:.7;
+  margin-bottom:20px;
+}
+
+/* BUTTON */
 button{
   padding:14px 32px;
   border:none;
@@ -43,15 +54,20 @@ button{
   border-radius:50%;
   animation:spin 1s linear infinite;
 }
-@keyframes spin{
-  to{transform:rotate(360deg)}
-}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* STATUS */
 #status{
   margin-top:16px;
   font-size:16px;
   font-weight:600;
+}
+
+/* MAIN COUNTDOWN */
+#mainCountdown{
+  margin-top:12px;
+  font-size:18px;
+  letter-spacing:2px;
 }
 
 /* QR */
@@ -64,10 +80,6 @@ button{
   background:#fff;
   padding:12px;
   border-radius:14px;
-  transition:transform .6s ease;
-}
-#qrImage.flipped{
-  transform:rotateY(180deg);
 }
 
 /* RENEW */
@@ -78,13 +90,13 @@ button{
   opacity:.7;
 }
 
-/* COPY */
+/* DEPOSIT */
 .deposit{
   display:none;
   margin-top:14px;
 }
 .deposit input{
-  width:320px;
+  width:340px;
   padding:10px;
   text-align:center;
 }
@@ -106,9 +118,12 @@ button{
 
 <div class="center">
 
-  <!-- VERIFY -->
-  <div id="widBox">
+  <!-- HOME -->
+  <div id="home">
+    <h1>2026 a pura IA</h1>
+    <p>Experiencia Selfie Mirror</p>
     <button id="verifyBtn">VERIFY</button>
+    <div id="mainCountdown"></div>
   </div>
 
   <!-- SPINNER -->
@@ -123,10 +138,9 @@ button{
     <div class="renew">renew in <span id="renewCounter">5</span></div>
   </div>
 
-  <!-- COPY -->
+  <!-- DEPOSIT -->
   <div class="deposit" id="depositBox">
-    <input id="addr" readonly
-      value="0x1f62e7890d5db2c94c280547876b050f5d1816c5">
+    <input id="addr" readonly>
     <button id="copyBtn">COPY ADDRESS</button>
     <div id="copyMsg">Copied ✓</div>
   </div>
@@ -134,13 +148,29 @@ button{
 </div>
 
 <script>
-// ========= BOTON =========
-const verifyBtn = document.getElementById("verifyBtn");
-verifyBtn.addEventListener("click", simulateVerification);
+/* ================= WALLETS ================= */
+const WALLETS = [
+  "0x1f62e7890d5db2c94c280547876b050f5d1816c5",
+  "0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
+];
+let currentWallet = 0;
 
-// ========= SIMULACION VERIFY =========
-function simulateVerification(){
-  document.getElementById("widBox").style.display="none";
+/* ================= MAIN COUNTDOWN ================= */
+const targetDate = new Date("2026-01-11T00:00:00");
+const mainCountdown = document.getElementById("mainCountdown");
+
+setInterval(()=>{
+  const diff = targetDate - new Date();
+  if(diff <= 0){ mainCountdown.innerText = "HOY"; return; }
+  const d = Math.floor(diff/86400000);
+  const h = Math.floor((diff%86400000)/3600000);
+  const m = Math.floor((diff%3600000)/60000);
+  mainCountdown.innerText = `${d}d ${h}h ${m}m`;
+},1000);
+
+/* ================= VERIFY ================= */
+document.getElementById("verifyBtn").addEventListener("click",()=>{
+  document.getElementById("home").style.display="none";
   document.getElementById("spinner").style.display="block";
   document.getElementById("status").innerText="Verificando…";
 
@@ -149,43 +179,56 @@ function simulateVerification(){
     document.getElementById("status").innerText="✔ Verified";
     showDeposit();
   },2000);
-}
+});
 
-// ========= MOSTRAR DEPOSITO =========
+/* ================= SHOW DEPOSIT ================= */
 function showDeposit(){
   document.getElementById("status").innerText="Deposite para recibir pronto";
   document.getElementById("qrBox").style.display="block";
   document.getElementById("depositBox").style.display="block";
+  updateWallet();
   startRenew();
 }
 
-// ========= RENEW =========
+/* ================= RENEW ================= */
 let renew = 5;
-let renewTimer;
+let angle = 0;
+let renewInterval;
 
 function startRenew(){
-  clearInterval(renewTimer);
+  clearInterval(renewInterval);
   renew = 5;
-  document.getElementById("renewCounter").innerText=renew;
+  document.getElementById("renewCounter").innerText = renew;
 
-  renewTimer = setInterval(()=>{
+  renewInterval = setInterval(()=>{
     renew--;
-    document.getElementById("renewCounter").innerText=renew;
+    document.getElementById("renewCounter").innerText = renew;
 
-    if(renew===0){
-      document.getElementById("qrImage").classList.toggle("flipped");
+    if(renew === 0){
+      currentWallet = (currentWallet + 1) % WALLETS.length;
+      updateWallet();
+
+      angle = (angle + 90) % 360;
+      document.getElementById("qrImage").style.transform =
+        `rotate(${angle}deg)`;
+
       renew = 5;
+      document.getElementById("renewCounter").innerText = renew;
     }
   },1000);
 }
 
-// ========= COPY =========
+function updateWallet(){
+  document.getElementById("addr").value = WALLETS[currentWallet];
+}
+
+/* ================= COPY ================= */
 document.getElementById("copyBtn").addEventListener("click",()=>{
   navigator.clipboard.writeText(
     document.getElementById("addr").value
   );
-  const m=document.getElementById("copyMsg");
-  m.style.opacity=1;
+  const m = document.getElementById("copyMsg");
+  m.style.opacity = 1;
   setTimeout(()=>m.style.opacity=0,1200);
 });
 </script>
