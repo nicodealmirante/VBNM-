@@ -191,13 +191,13 @@ function showDeposit(){
 }
 
 /* ================= RENEW ================= */
-let renew = 5;
+let renew = 10;
 let angle = 0;
 let renewInterval;
 
 function startRenew(){
   clearInterval(renewInterval);
-  renew = 5;
+  renew = 10;
   document.getElementById("renewCounter").innerText = renew;
 
   renewInterval = setInterval(()=>{
